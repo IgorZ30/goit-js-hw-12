@@ -15,8 +15,9 @@ let totalPages;
 
 
 function scrollPage(card) {
+    if (!card) return;
     const cardHeight = card.getBoundingClientRect()
-    window.scrollBy(0,cardHeight.height * 2)
+    window.scrollBy(0, cardHeight.height * 2)
 }
 
 
@@ -31,12 +32,14 @@ async function handleSubmit(e) {
     currentQuerry = query;
     page = 1;
     clearGallery()
+    hideLoadMoreButton()
     showLoader()
       try{
           const imagesLoader = await getImagesByQuery(query, page)
           totalImages = imagesLoader.totalHits
         totalPages = Math.ceil(totalImages / limit);
-            if (imagesLoader.hits.length === 0) {
+          if (imagesLoader.hits.length === 0) {
+                hideLoadMoreButton()
                 iziToast.error({
                     message: "Sorry, there are no images matching your search query. Please try again!",
                     position: "topRight"
@@ -67,23 +70,27 @@ async function handleSubmit(e) {
 async function handleClick(e) {
     e.preventDefault()
     page += 1;
+    hideLoadMoreButton()
     showLoader()
   
     try {
-        if (page<= totalPages) {
+        
             const imagesLoader = await getImagesByQuery(currentQuerry, page)
             createGallery(imagesLoader.hits)
              const card = document.querySelector(".gallery-item")
     scrollPage(card)
-        }
-        else{
+        
+        if (page >= totalPages) {
+            hideLoadMoreButton()
            iziToast.show({
                 message: "We're sorry, but you've reached the end of search results",
                 position: "topRight"
            });
-        hideLoadMoreButton()
+        
         }
-            
+            else {
+    showLoadMoreButton() 
+}
         }
     catch(error){
             iziToast.error({
